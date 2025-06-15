@@ -2,7 +2,9 @@
 
 #include <vector>
 #include <cstring>
+#ifndef __aarch64__
 #include <immintrin.h>
+#endif
 #include "threadpool.h"
 
 class Pyramid {
