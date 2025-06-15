@@ -1,0 +1,1 @@
+gcc -pthread -ffast-math -g -O0 multiblend_aarch64.cpp -o multiblend_aarch64 -lm -lpng -ltiff -ljpeg -lstdc++
