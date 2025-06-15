@@ -92,18 +92,28 @@ class my_timer {
 private:
     #ifdef __aarch64__
         uint64_t start_time;
+        uint64_t freq;
     #else
         uint64_t start_time;
     #endif
     
 public:
+    my_timer() {
+        #ifdef __aarch64__
+            // Get timer frequency
+            asm volatile("mrs %0, cntfrq_el0" : "=r" (freq));
+        #endif
+    }
+    
     void set() {
         #ifdef __aarch64__
             // ARM64 cycle counter
             asm volatile("mrs %0, cntvct_el0" : "=r" (start_time));
         #else
             // x86 timestamp counter
-            start_time = __rdtsc();
+            unsigned int lo, hi;
+            asm volatile("rdtsc" : "=a" (lo), "=d" (hi));
+            start_time = ((uint64_t)hi << 32) | lo;
         #endif
     }
     
@@ -111,10 +121,12 @@ public:
         uint64_t end_time;
         #ifdef __aarch64__
             asm volatile("mrs %0, cntvct_el0" : "=r" (end_time));
-            // Convert to seconds (assuming 1GHz for simplicity, adjust as needed)
-            return (double)(end_time - start_time) / 1000000000.0;
+            // Convert to seconds using actual frequency
+            return (double)(end_time - start_time) / (double)freq;
         #else
-            end_time = __rdtsc();
+            unsigned int lo, hi;
+            asm volatile("rdtsc" : "=a" (lo), "=d" (hi));
+            end_time = ((uint64_t)hi << 32) | lo;
             // Convert to seconds (assuming 3GHz for simplicity, adjust as needed)
             return (double)(end_time - start_time) / 3000000000.0;
         #endif
