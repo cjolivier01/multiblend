@@ -15,6 +15,36 @@ using namespace std;
 #include <stdlib.h>
 #include <string.h>
 
+#include <cstddef>
+#include <cstdarg>
+
+#define NOMINMAX
+#include <stdio.h>
+#include <stdint.h>
+#include <vector>
+#include <algorithm>
+#ifdef __APPLE__
+#define memalign(a,b) malloc((b))
+#else
+#include <malloc.h>
+#endif
+
+#include "tiffio.h"
+#include "jpeglib.h"
+
+#ifndef _WIN32
+#include <strings.h>
+int _stricmp(const char* a, const char* b) { return strcasecmp(a, b); }
+#define ZeroMemory(a,b) memset(a,0,b)
+#define sprintf_s sprintf
+#define sscanf_s sscanf
+void* _aligned_malloc(size_t size, int boundary) { return memalign(boundary, size); }
+void _aligned_free(void* a) { free(a); }
+void fopen_s(FILE** f, const char* filename, const char* mode) { *f = fopen(filename, mode); }
+#endif
+
+int verbosity = 1;
+
 #ifdef __APPLE__
   #define memalign(a,b) malloc((b))
 #else
@@ -44,9 +74,12 @@ using namespace std;
 #include <png.h>
 #include <tiffio.h>
 
+#include "pnger.cpp"
+
 // Platform-specific includes with ARM64 support
 #include "globals_aarch64.cpp"
 #include "functions_aarch64.cpp"
+#include "functions.cpp"
 #include "geotiff.cpp"
 //#include "loadimages.cpp"
 //#include "seaming_aarch64.cpp"
@@ -56,13 +89,12 @@ using namespace std;
 //#include "pseudowrap.cpp"
 //#include "go.cpp"
 
-#include "pnger.cpp"
 //#include "pyramid.cpp"
 //#include "functions.cpp"
 
 //#include "mapalloc.cpp"
 #include "threadpool.cpp"
-#include "geotiff.cpp"
+//#include "geotiff.cpp"
 
 #ifdef WIN32
 #pragma comment(lib,"libtiff.lib")

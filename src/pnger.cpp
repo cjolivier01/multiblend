@@ -1,5 +1,7 @@
 #include "png.h"
 #include <math.h>
+#include <stdio.h>
+
 #define PNGER
 
 void Output(int level, const char* fmt, ...);

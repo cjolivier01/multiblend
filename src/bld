@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ "$(uname -p)" == "aarch64" ]; then
-  gcc -pthread -ffast-math -g -O0 multiblend_aarch64.cpp -o multiblend -lm -lpng -ltiff -ljpeg -lstdc++
+  gcc -pthread -fmax-errors=10 -ffast-math -g -O0 multiblend_aarch64.cpp -o multiblend -lm -lpng -ltiff -ljpeg -lstdc++
 else
   gcc -msse4.1 -pthread -ffast-math -g -O0 multiblend.cpp -o multiblend -lm -lpng -ltiff -ljpeg -lstdc++
 fi
