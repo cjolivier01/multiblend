@@ -4,113 +4,13 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # GPLv3 in repo; see gpl-3.0.txt
 
-cc_library(
-    name = "mapalloc_lib",
-    srcs = [
-        "src/mapalloc.cpp",
-    ],
-    hdrs = [
-        "src/mapalloc.h",
-    ],
-)
-
-cc_library(
-    name = "threadpool_lib",
-    srcs = [
-        "src/threadpool.cpp",
-    ],
-    hdrs = [
-        "src/threadpool.h",
-    ],
-    deps = [],
-)
-
-cc_library(
-    name = "functions_lib",
-    srcs = [
-        "src/functions.cpp",
-    ],
-    hdrs = [
-        "src/functions.h",
-    ],
-    deps = [
-        ":pyramid_lib",
-    ],
-)
-
-cc_library(
-    name = "pyramid_lib",
-    srcs = [
-        "src/pyramid.cpp",
-    ],
-    hdrs = [
-        "src/pyramid.h",
-    ],
-    deps = [
-        ":threadpool_lib",
-    ],
-    copts = [
-        "-msse4.1",
-        "-ffast-math",
-        "-pthread",
-    ],
-)
-
-cc_library(
-    name = "geotiff_lib",
-    srcs = [
-        "src/geotiff.cpp",
-    ],
-    hdrs = [
-        "src/geotiff.h",
-    ],
-)
-
-cc_library(
-    name = "pnger_lib",
-    srcs = [
-        "src/pnger.cpp",
-    ],
-    hdrs = [
-        "src/pnger.h",
-    ],
-    deps = [
-        ":functions_lib",
-    ],
-)
-
-cc_library(
-    name = "image_lib",
-    srcs = [
-        "src/image.cpp",
-    ],
-    hdrs = [
-        "src/image.h",
-        "src/image_types.h",
-    ],
-    deps = [
-        ":functions_lib",
-        ":mapalloc_lib",
-        ":pyramid_lib",
-        ":threadpool_lib",
-        ":pnger_lib",
-        ":geotiff_lib",
-    ],
-)
-
 cc_binary(
     name = "multiblend",
     srcs = [
         "src/multiblend.cpp",
     ],
     deps = [
-        ":mapalloc_lib",
-        ":threadpool_lib",
-        ":functions_lib",
-        ":pyramid_lib",
-        ":pnger_lib",
-        ":geotiff_lib",
-        ":image_lib",
+        ":m_inc",
     ],
     copts = [
         "-msse4.1",
@@ -124,6 +24,27 @@ cc_binary(
         "-ltiff",
         "-ljpeg",
         "-pthread",
+    ],
+)
+
+
+cc_library(
+    name = "m_inc",
+    srcs = [],
+    hdrs = [
+        "src/pnger.cpp",
+        "src/pyramid.cpp",
+        "src/pyramid.h",
+        "src/threadpool.h",
+        "src/threadpool.cpp",
+        "src/mapalloc.cpp",
+        "src/mapalloc.h",
+        "src/geotiff.cpp",
+        "src/image.cpp",
+        "src/functions.cpp",
+    ],
+    includes = [
+        "src",
     ],
 )
 
