@@ -42,45 +42,15 @@ void _aligned_free(void* a) { free(a); }
 void fopen_s(FILE** f, const char* filename, const char* mode) { *f = fopen(filename, mode); }
 #endif
 
-extern int verbosity;
+int verbosity = 1;
 
-#include "pyramid.h"
+#include "pnger.cpp"
+#include "pyramid.cpp"
+#include "functions.cpp"
 
-#include "mapalloc.h"
-#include "threadpool.h"
-// Pull single-TU sources to preserve original integration
-#include <cmath>
-#include <cstring>
-#include "src/functions.h"
-#include "src/threadpool.h"
-#include "src/pyramid.h"
-#include "src/image.h"
-#include "src/pnger.h"
-#include "src/geotiff.h"
-#include "src/image_types.h"
-
-// Macros originally defined alongside implementation; kept here to preserve behavior.
-#define SEAM_DT    ReadSeamDT(seam_flex, current_count, current_step, dt_val)
-#define RECORD(I, C) \
-    if ((I) != current_i) { \
-        if (mc > 0) { \
-            if (seam_map) memset(&seam_map->line[x - mc], current_i, mc); \
-            for (i = 0; i < n_images; ++i) { \
-                if (i == current_i) { \
-                    images[i]->masks[0]->Write32(0xc0000000 | mc); \
-                } else if (i == prev_i || prev_i == -1) { \
-                    images[i]->masks[0]->Write32(0x80000000 | mc); \
-                } else { \
-                    images[i]->masks[0]->IncrementLast32(mc); \
-                } \
-            } \
-        } \
-        prev_i = current_i; \
-        mc = C; \
-        current_i = I; \
-    } else { \
-        mc += C; \
-    }
+#include "mapalloc.cpp"
+#include "threadpool.cpp"
+#include "geotiff.cpp"
 
 class PyramidWithMasks : public Pyramid {
 public:
@@ -88,7 +58,9 @@ public:
 	std::vector<Flex*> masks;
 };
 
-// Image definitions are in image_lib
+enum class ImageType { MB_NONE, MB_TIFF, MB_JPEG, MB_PNG };
+
+#include "image.cpp"
 
 #ifdef _WIN32
 FILE _iob[] = { *stdin, *stdout, *stderr };
@@ -313,7 +285,7 @@ int main(int argc, char* argv[]) {
 			++i;
 		}
 
-    else if (!strcmp(my_argv[i], "--compression")) {
+		else if (!strcmp(my_argv[i], "--compression")) {
 			if (++i < (int)my_argv.size()) {
 				if (strcmp(my_argv[i], "0") == 0) jpeg_quality = 0;
 				else if (atoi(my_argv[i]) > 0) jpeg_quality = atoi(my_argv[i]);
@@ -330,7 +302,7 @@ int main(int argc, char* argv[]) {
 		else if ((!strcmp(my_argv[i], "--saveseams") || !strcmp(my_argv[i], "--save-seams")) && i < (int)my_argv.size() - 1) seamsave_filename = my_argv[++i];
 		else if ((!strcmp(my_argv[i], "--loadseams") || !strcmp(my_argv[i], "--load-seams")) && i < (int)my_argv.size() - 1) seamload_filename = my_argv[++i];
 		else if ((!strcmp(my_argv[i], "--savexor") || !strcmp(my_argv[i], "--save-xor")) && i < (int)my_argv.size() - 1) xor_filename = my_argv[++i];
-        else if ((!strcmp(my_argv[i], "--tempdir") || !strcmp(my_argv[i], "--tmpdir")) && i < (int)my_argv.size() - 1) MapAlloc::SetTmpdir(my_argv[++i]);
+		else if (!strcmp(my_argv[i], "--tempdir") || !strcmp(my_argv[i], "--tmpdir") && i < (int)my_argv.size() - 1) MapAlloc::SetTmpdir(my_argv[++i]);
 		else if (!strcmp(my_argv[i], "--all-threads")) all_threads = true;
 		else if (!strcmp(my_argv[i], "-o") || !strcmp(my_argv[i], "--output")) {
 			if (++i < (int)my_argv.size()) {
@@ -815,7 +787,7 @@ int main(int argc, char* argv[]) {
 * Forward distance transform
 ***********************************************************************/
 	int current_count = 0;
-        int64_t current_step;
+	int64 current_step;
 	uint64_t dt_val;
 
 	prev_line = thread_lines[1];
@@ -1146,7 +1118,7 @@ int main(int argc, char* argv[]) {
 		png_read_info(png_ptr, info_ptr);
 		png_get_IHDR(png_ptr, info_ptr, &png_width, &png_height, &png_depth, &png_colour, NULL, NULL, NULL);
 
-                if (png_width != (png_uint_32)width || png_height != (png_uint_32)height) die("Error: Seam PNG dimensions don't match workspace");
+		if (png_width != width || png_height != png_height) die("Error: Seam PNG dimensions don't match workspace");
 		if (png_depth != 8 || png_colour != PNG_COLOR_TYPE_PALETTE) die("Error: Incorrect seam PNG format");
 
 		png_bytep png_line = (png_bytep)malloc(width);
@@ -1402,7 +1374,7 @@ int main(int argc, char* argv[]) {
 
 						int wrap_levels = (w == 1) ? wrap_levels_h : wrap_levels_v;
 						for (int wp = 0; wp < 2; ++wp) {
-                    wrap_pyramids[p]->Copy((uint8_t*)(output_pyramid->GetData() + wrap_pyramids[p]->GetX() + wrap_pyramids[p]->GetY() * (int64_t)output_pyramid->GetPitch()), 1, output_pyramid->GetPitch(), false, 32);
+							wrap_pyramids[p]->Copy((uint8_t*)(output_pyramid->GetData() + wrap_pyramids[p]->GetX() + wrap_pyramids[p]->GetY() * (int64)output_pyramid->GetPitch()), 1, output_pyramid->GetPitch(), false, 32);
 							wrap_pyramids[p]->Shrink();
 							wrap_pyramids[p]->Laplace();
 
@@ -1525,7 +1497,7 @@ int main(int argc, char* argv[]) {
 
 		int n_strips = (int)((height + ROWS_PER_STRIP - 1) / ROWS_PER_STRIP);
 		int remaining = height;
-                void* strip = malloc((ROWS_PER_STRIP * (int64_t)width) * bytes_per_pixel);
+		void* strip = malloc((ROWS_PER_STRIP * (int64)width) * bytes_per_pixel);
 		void* oc_p[3] = { output_channels[0], output_channels[1], output_channels[2] };
 		if (bgr) std::swap(oc_p[0], oc_p[2]);
 
@@ -1647,7 +1619,7 @@ int main(int argc, char* argv[]) {
 
 			switch (output_type) {
 				case ImageType::MB_TIFF: {
-                    TIFFWriteEncodedStrip(tiff_file, s, strip, rows * (int64_t)bytes_per_row);
+					TIFFWriteEncodedStrip(tiff_file, s, strip, rows * (int64)bytes_per_row);
 				} break;
 				case ImageType::MB_JPEG: {
 					jpeg_write_scanlines(&cinfo, scanlines, rows);

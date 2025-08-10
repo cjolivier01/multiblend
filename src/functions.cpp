@@ -1,21 +1,8 @@
 #include <chrono>
-#include "src/functions.h"
-#include <cstdarg>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <vector>
-#include <algorithm>
-#include <cstdint>
-#include "src/pyramid.h"
-
-extern int verbosity;
 
 /***********************************************************************
 * Flexible data class
 ***********************************************************************/
-int verbosity = 1;
-#if 0
 class Flex {
 public:
 	Flex(int _width, int _height) : width(_width), height(_height) {
@@ -118,9 +105,19 @@ private:
 	bool first;
 };
 
-#if 0
-void Output(int level, const char* fmt, ...) {}
-#endif
+/***********************************************************************
+* Output
+***********************************************************************/
+void Output(int level, const char* fmt, ...) {
+	va_list args;
+
+	if (level <= verbosity) {
+		va_start(args, fmt);
+		vprintf(fmt, args);
+		va_end(args);
+	}
+	fflush(stdout);
+}
 
 /***********************************************************************
 * Timer
@@ -143,11 +140,20 @@ public:
 private:
 	std::chrono::high_resolution_clock::time_point start_time;
 };
-#endif
 
-#if 0
-void die(const char* error, ...) {}
-#endif
+/***********************************************************************
+* Die
+***********************************************************************/
+void die(const char* error, ...) {
+	va_list args;
+
+	va_start(args,error);
+	vprintf(error,args);
+	va_end(args);
+	printf("\n");
+
+  exit(EXIT_FAILURE);
+}
 
 /***********************************************************************
 * ShrinkMasks
@@ -556,7 +562,7 @@ void ReadInpaintDT(Flex* flex, int& current_count, int& current_step, uint32_t& 
 	}
 }
 
-void ReadSeamDT(Flex* flex, int& current_count, int64_t& current_step, uint64_t& dt_val) {
+void ReadSeamDT(Flex* flex, int& current_count, int64& current_step, uint64_t& dt_val) {
 	if (current_count) {
 		--current_count;
 		dt_val += current_step;
@@ -566,11 +572,11 @@ void ReadSeamDT(Flex* flex, int& current_count, int64_t& current_step, uint64_t&
 			dt_val = flex->ReadBackwards64();
 			return;
 		} else {
-			current_step = ((int64_t)(_byte & 7) - 3) << 32;
+			current_step = ((int64)(_byte & 7) - 3) << 32;
 			if (!(_byte & 0x80)) { // 0b0ccccsss
 				current_count = _byte >> 3;
 			} else if (!(_byte & 0x40)) { // 0b10ssssss
-				current_step = (int64_t)(_byte & 0x3f) << 32;
+				current_step = (int64)(_byte & 0x3f) << 32;
 				current_count = 0;
 			} else if (!(_byte & 0x20)) { // 0b11000000
 				current_count = flex->ReadBackwards8();
@@ -669,7 +675,7 @@ int CompressSeamLine(uint64_t* input, uint8_t* output, int width) {
 	int current_step = -100;
 	int current_count = 0;
 
-        int64_t step;
+	int64 step;
 	int x = width;
 	int p = 0;
 	uint64_t left_val;
@@ -682,7 +688,7 @@ int CompressSeamLine(uint64_t* input, uint8_t* output, int width) {
 		while (!((left_val = input[--x]) & 0xffffffff00000000) && x > 0);
 		if (!(left_val & 0xffffffff00000000)) break;
 
-                if (!((right_val ^ left_val) & 0xffffffff) && (step = ((int64_t)(right_val - left_val) >> 32) + 3) < 67 && step >= 0) { // was <= 7
+		if (!((right_val ^ left_val) & 0xffffffff) && (step = ((int64)(right_val - left_val) >> 32) + 3) < 67 && step >= 0) { // was <= 7
 			if (step <= 7) {
 				if (step == current_step) {
 					++current_count;
@@ -764,8 +770,8 @@ void SwapUnswapV(Pyramid* py, bool unswap) {
 	if (height & 1) {
 		uint8_t* temp2 = (uint8_t*)malloc(byte_pitch);
 		if (unswap) {
-            uint8_t* upper = (uint8_t*)(py->GetData() + ((int64_t)height >> 1) * py->GetPitch());
-            uint8_t* lower = (uint8_t*)(py->GetData() + ((int64_t)height - 1) * py->GetPitch());
+			uint8_t* upper = (uint8_t*)(py->GetData() + ((int64)height >> 1) * py->GetPitch());
+			uint8_t* lower = (uint8_t*)(py->GetData() + ((int64)height - 1) * py->GetPitch());
 
 			memcpy(temp, upper, byte_pitch);
 
@@ -781,7 +787,7 @@ void SwapUnswapV(Pyramid* py, bool unswap) {
 			memcpy(lower, temp, byte_pitch);
 		} else {
 			uint8_t* upper = (uint8_t*)py->GetData();
-            uint8_t* lower = (uint8_t*)(py->GetData() + ((int64_t)height >> 1) * py->GetPitch());
+			uint8_t* lower = (uint8_t*)(py->GetData() + ((int64)height >> 1) * py->GetPitch());
 
 			memcpy(temp, lower, byte_pitch);
 
@@ -800,7 +806,7 @@ void SwapUnswapV(Pyramid* py, bool unswap) {
 		free(temp2);
 	} else {
 		uint8_t* upper = (uint8_t*)py->GetData();
-        uint8_t* lower = (uint8_t*)(py->GetData() + (int64_t)half_height * py->GetPitch());
+		uint8_t* lower = (uint8_t*)(py->GetData() + (int64)half_height * py->GetPitch());
 		for (int y = 0; y < half_height; ++y) {
 			memcpy(temp, upper, byte_pitch);
 			memcpy(upper, lower, byte_pitch);
