@@ -1,4 +1,14 @@
 #include "pyramid.h"
+#ifndef _WIN32
+#include <malloc.h>
+#include <cstring>
+#include <cmath>
+static inline void* _aligned_malloc(size_t size, int boundary) { return memalign(boundary, size); }
+static inline void _aligned_free(void* a) { free(a); }
+#ifndef ZeroMemory
+#define ZeroMemory(a,b) memset(a,0,b)
+#endif
+#endif
 
 #ifdef PYR_DENOISE
 #define USE_SSE2

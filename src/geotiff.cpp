@@ -1,12 +1,15 @@
 // some defintions for geotiff
+#include "tiffio.h"
+#include "geotiff.h"
+#include <cstdlib>
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
 
-struct GeoTIFFInfo {
-	double XGeoRef, YGeoRef;
-	double XCellRes, YCellRes;
-	double projection[16];
-	int    nodata;
-	bool   set;
-};
+// GeoTIFFInfo is declared in geotiff.h
 
 #define TIFFTAG_GEOPIXELSCALE   33550
 #define TIFFTAG_GEOTIEPOINTS    33922

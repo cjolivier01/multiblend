@@ -1,0 +1,23 @@
+# Common Bazel configuration for this repository
+
+# Linux profile: enables SSE4.1, fast-math, pthread, and links image libs
+build:linux --copt=-msse4.1
+build:linux --copt=-ffast-math
+build:linux --copt=-pthread
+build:linux --linkopt=-lm
+build:linux --linkopt=-lpng
+build:linux --linkopt=-ltiff
+build:linux --linkopt=-ljpeg
+build:linux --linkopt=-pthread
+
+test:linux --config=linux
+run:linux --config=linux
+
+# CI profile: reuse linux profile
+build:ci --config=linux
+test:ci --config=linux
+run:ci --config=linux
+
+# Use legacy WORKSPACE until bzlmod migration is complete
+common --enable_bzlmod=false
+common --enable_workspace=true

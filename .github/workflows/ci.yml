@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpng-dev libtiff-dev libjpeg-dev
+
+      - name: Setup Bazel
+        uses: bazelbuild/setup-bazel@v5
+
+      - name: Bazel test
+        run: bazel test --config=ci //...

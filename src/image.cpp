@@ -1,7 +1,30 @@
+// Added explicit includes to build Image as a separate library
+#include "src/image.h"
+#include "mapalloc.h"
+#include "pyramid.h"
+#include "threadpool.h"
+#include "functions.h"
+#include "geotiff.h"
+#include "image_types.h"
+#include "tiffio.h"
+#include "jpeglib.h"
+#include "png.h"
+#include "src/pnger.h"
+
+#ifndef _WIN32
+#include <strings.h>
+static inline int _stricmp(const char* a, const char* b) { return strcasecmp(a, b); }
+#define sprintf_s sprintf
+static inline void fopen_s(FILE** f, const char* filename, const char* mode) { *f = fopen(filename, mode); }
+#endif
+
+#define INPAINT_DT ReadInpaintDT(dt, current_count, current_step, dt_val);
+
 int hist_red[256];
 int hist_grn[256];
 int hist_blu[256];
 
+#if 0
 class Channel {
 public:
 	Channel(size_t _bytes) : bytes(_bytes) {
@@ -56,6 +79,7 @@ private:
 	struct jpeg_error_mgr jerr;
 	png_structp png_ptr;
 };
+#endif
 
 Image::Image(char* _filename) : filename(_filename) {
 }
