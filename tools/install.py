@@ -4,9 +4,14 @@ import os
 import shutil
 import sys
 
+def default_install_prefix() -> str: 
+    if "CONDA_PREFIX" in os.environ:
+        return os.path.join(os.environ["CONDA_PREFIX"])
+    return "/usr/local"
+
 def main():
     parser = argparse.ArgumentParser(description="Install multiblend binary into <prefix>/bin")
-    parser.add_argument("--prefix", default="/usr/local", help="installation prefix (default: /usr/local)")
+    parser.add_argument("--prefix", default=default_install_prefix(), help="installation prefix (default: /usr/local)")
     parser.add_argument("--binary", default=None, help="path to built multiblend (internal)")
     args, extra = parser.parse_known_args()
 

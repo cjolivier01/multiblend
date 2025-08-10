@@ -131,4 +131,5 @@ py_binary(
     name = "install",
     srcs = ["tools/install.py"],
     data = [":multiblend"],
+    args = ["--binary=$(location :multiblend)"],
 )
