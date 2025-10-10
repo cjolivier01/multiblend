@@ -1,3 +1,17 @@
+Multiblend can now be built with Bazel:
+
+  bazel build //:multiblend
+
+To stage an install tree (and optionally copy it to a prefix):
+
+  # Display the staged tree path
+  bazel run //:install_tree
+
+  # Install into ~/.local
+  bazel run //:install_tree -- --prefix="$HOME/.local"
+
+Older manual build commands are kept below for reference.
+
 The following command should work to build Multiblend on Linux:
 
   g++ -msse4.1 -pthread -ffast-math -Ofast -o multiblend multiblend.cpp -lm -lpng -ltiff -ljpeg

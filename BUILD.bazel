@@ -1,0 +1,50 @@
+load("//:install_tree_rules.bzl", "staged_install_tree")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "multiblend_lib",
+    srcs = ["src/multiblend.cpp"],
+    hdrs = [
+        "src/mapalloc.h",
+        "src/pyramid.h",
+        "src/threadpool.h",
+    ],
+    textual_hdrs = [
+        "src/functions.cpp",
+        "src/geotiff.cpp",
+        "src/image.cpp",
+        "src/mapalloc.cpp",
+        "src/pnger.cpp",
+        "src/pyramid.cpp",
+        "src/threadpool.cpp",
+    ],
+    copts = [
+        "-msse4.1",
+        "-ffast-math",
+    ],
+)
+
+cc_binary(
+    name = "multiblend",
+    deps = [":multiblend_lib"],
+    linkopts = [
+        "-lm",
+        "-lpng",
+        "-ltiff",
+        "-ljpeg",
+        "-pthread",
+    ],
+)
+
+staged_install_tree(
+    name = "staged_install_tree",
+    binary = ":multiblend",
+)
+
+sh_binary(
+    name = "install_tree",
+    srcs = ["tools/install_tree.sh"],
+    data = [":staged_install_tree"],
+    args = ["--staged-tree=$(location :staged_install_tree)"],
+)
