@@ -1,8 +1,13 @@
-Multiblend can now be built with Bazel:
+Multiblend can now be built with Bazel. Helper scripts are provided for
+common workflows:
 
-  bazel build //:multiblend
+  ./bld              # Debug build (bazel build -c dbg //:multiblend)
+  ./perf             # Optimised build (bazel build -c opt //:multiblend --copt=-Ofast)
+  ./install.sh       # Run install tree staging (accepts optional --prefix)
 
-To stage an install tree (and optionally copy it to a prefix):
+The scripts accept additional flags which are forwarded to Bazel.
+
+To stage an install tree manually (and optionally copy it to a prefix):
 
   # Display the staged tree path
   bazel run //:install_tree
