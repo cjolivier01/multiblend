@@ -23,18 +23,17 @@ cc_library(
         "-msse4.1",
         "-ffast-math",
     ],
+    deps = [
+        "@libtiff//:tiff",
+        "@libjpeg//:jpeg",
+        "@libpng//:png",
+    ],
 )
 
 cc_binary(
     name = "multiblend",
     deps = [":multiblend_lib"],
-    linkopts = [
-        "-lm",
-        "-lpng",
-        "-ltiff",
-        "-ljpeg",
-        "-pthread",
-    ],
+    linkopts = ["-lm", "-pthread"],
 )
 
 staged_install_tree(
